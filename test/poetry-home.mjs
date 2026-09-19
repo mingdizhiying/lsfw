@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+const base=process.env.TEST_ORIGIN||'http://127.0.0.1:8790';let cookie='';
+async function req(path,body,method=body?'PUT':'GET',admin=true){const r=await fetch(base+path,{method,headers:{Origin:base,...(admin?{Cookie:cookie}:{}),...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});return {status:r.status,body:await r.json(),cookie:r.headers.get('set-cookie')}}
+const login=await req('/api/auth/login',{email:(process.env.TEST_ADMIN_EMAIL||'admin@example.com'),password:'local-test-password-98765'},'POST');assert.equal(login.status,200);cookie=login.cookie.split(';')[0];
+const id=crypto.randomUUID(),pid=crypto.randomUUID(),text='  第一行\n第二行\n\n下一节 <script>只是文字</script>';
+assert.equal((await req('/api/admin/poetry',null,'GET',false)).status,401);
+assert.equal((await req('/api/admin/home-copy',{},'PUT',false)).status,401);
+await req('/api/admin/poetry/books/'+id,{title:'本地测试诗集',description:'目录测试',status:'draft'});
+await req('/api/admin/poetry/poems/'+pid,{book_id:id,title:'诗行测试',body:text,date:'2026-09-19',status:'published'});
+assert.equal((await req('/api/poetry/poems/'+pid)).status,404);assert.ok(!(await req('/api/poetry/poems')).body.items.some(p=>p.id===pid));
+await req('/api/admin/poetry/books/'+id,{title:'本地测试诗集',description:'目录测试',status:'published'});
+assert.equal((await req('/api/poetry/poems/'+pid)).body.body,text);
+assert.equal((await req('/api/poetry/books/'+id)).body.poems.length,1);assert.ok((await req('/api/poetry/poems')).body.items.some(p=>p.id===pid));
+await req('/api/admin/poetry/poems/'+pid,{book_id:id,title:'诗行测试',body:text,date:'2026-09-19',status:'draft'});
+assert.equal((await req('/api/poetry/books/'+id)).body.poems.length,0);
+const original=(await req('/api/home-copy')).body;
+await req('/api/admin/home-copy',{...original,daysTitle:'改过的标题',monthQuote:'第一行\n第二行',footerQuote:'<img src=x onerror=alert(1)>'});
+const changed=(await req('/api/home-copy')).body;assert.equal(changed.daysTitle,'改过的标题');assert.equal(changed.monthQuote,'第一行\n第二行');
+await req('/api/admin/home-copy',original);
+await req('/api/admin/poetry/poems/'+pid,{book_id:id,title:'诗行测试',body:text,date:'2026-09-19',status:'published'});
+console.log('PASS: home text persistence, admin authorization, poetry draft privacy, collection membership, exact poem whitespace.');console.log('QA poem: '+base+'/poetry/poems/'+pid);

@@ -1,0 +1,11 @@
+import {randomBytes} from 'node:crypto';
+import {mkdirSync,writeFileSync,existsSync,readFileSync} from 'node:fs';
+import {spawnSync} from 'node:child_process';
+mkdirSync('private',{recursive:true});
+const tokenFile='private/setup-token.txt';
+const token=existsSync(tokenFile)?readFileSync(tokenFile,'utf8').trim():randomBytes(32).toString('base64url');
+writeFileSync(tokenFile,token+'\n');
+const result=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','secret','put','SETUP_TOKEN'],{input:token+'\n',encoding:'utf8'});
+process.stdout.write((result.stdout||'').replaceAll(token,'[redacted]'));
+process.stderr.write((result.stderr||'').replaceAll(token,'[redacted]'));
+process.exitCode=result.status??1;

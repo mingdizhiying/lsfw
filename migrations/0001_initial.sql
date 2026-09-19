@@ -1,0 +1,16 @@
+CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE admin (id INTEGER PRIMARY KEY CHECK(id=1), email TEXT NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE sessions (token_hash TEXT PRIMARY KEY, expires_at INTEGER NOT NULL);
+CREATE TABLE limits (key TEXT PRIMARY KEY, hits INTEGER NOT NULL DEFAULT 1, expires_at INTEGER NOT NULL);
+CREATE TABLE entries (id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('blog','note','project','album')), title TEXT NOT NULL, body TEXT NOT NULL DEFAULT '', excerpt TEXT NOT NULL DEFAULT '', cover TEXT NOT NULL DEFAULT '', tags TEXT NOT NULL DEFAULT '[]', date TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('draft','published')), password_hash TEXT, link TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE INDEX idx_entries_kind_status_date ON entries(kind,status,date DESC);
+CREATE TABLE media (id TEXT PRIMARY KEY, entry_id TEXT REFERENCES entries(id) ON DELETE SET NULL, mime TEXT NOT NULL, size INTEGER NOT NULL, caption TEXT NOT NULL DEFAULT '', position INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL);
+CREATE INDEX idx_media_entry ON media(entry_id,position);
+CREATE TABLE comments (id TEXT PRIMARY KEY, entry_id TEXT REFERENCES entries(id) ON DELETE CASCADE, nickname TEXT NOT NULL, email TEXT NOT NULL DEFAULT '', message TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')), reply TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, replied_at TEXT);
+CREATE INDEX idx_comments_entry_status_created ON comments(entry_id,status,created_at DESC);
+CREATE INDEX idx_comments_status_created ON comments(status,created_at DESC);
+CREATE TABLE activities (id TEXT PRIMARY KEY, name TEXT NOT NULL, icon TEXT NOT NULL, color TEXT NOT NULL, private INTEGER NOT NULL DEFAULT 0, position INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE checkins (activity_id TEXT NOT NULL REFERENCES activities(id), date TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY(activity_id,date));
+CREATE INDEX idx_checkins_date ON checkins(date);
+CREATE TABLE cache (key TEXT PRIMARY KEY, value TEXT NOT NULL, expires_at INTEGER NOT NULL);
+CREATE TABLE mail_outbox (id TEXT PRIMARY KEY, comment_id TEXT NOT NULL REFERENCES comments(id) ON DELETE CASCADE, status TEXT NOT NULL DEFAULT 'pending', created_at TEXT NOT NULL, sent_at TEXT);

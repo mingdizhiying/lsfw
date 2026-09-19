@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+const base='http://127.0.0.1:8792';let cookie='';
+const req=async(path,body,method=body?'PUT':'GET',admin=true)=>{const r=await fetch(base+path,{method,headers:{Origin:base,...(admin?{Cookie:cookie}:{}),...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});return {status:r.status,body:await r.json(),cookie:r.headers.get('set-cookie')}};
+const login=await req('/api/auth/login',{email:(process.env.TEST_ADMIN_EMAIL||'admin@example.com'),password:'local-test-password-98765'},'POST');assert.equal(login.status,200);cookie=login.cookie.split(';')[0];
+assert.equal((await req('/api/admin/food',null,'GET',false)).status,401);
+const id=crypto.randomUUID(),r={title:'本地美食测试',province:'四川省',city:'成都市',rating:4.5,date:'2026-09-19',body:'第一行\n第二行',status:'draft'};
+assert.equal((await req('/api/admin/food/'+id,r)).status,200);assert.ok(!(await req('/api/food')).body.some(x=>x.id===id));
+assert.equal((await req('/api/admin/food/'+id,{...r,rating:6})).status,400);
+assert.equal((await req('/api/admin/food/'+id,{...r,date:'2026-02-30'})).status,400);
+await req('/api/admin/food/'+id,{...r,status:'published'});assert.equal((await req('/api/food')).body.find(x=>x.id===id).rating,4.5);
+const fd=new FormData();fd.set('file',new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=','base64')],{type:'image/png'}),'test.png');const uploaded=await fetch(base+'/api/admin/media',{method:'POST',headers:{Origin:base,Cookie:cookie},body:fd});assert.equal(uploaded.status,200);const cover=await uploaded.json();
+const bid=crypto.randomUUID(),book={title:'封面日期测试',cover:cover.url,date:'2020-01-02',status:'draft'};assert.equal((await req('/api/admin/poetry/books/'+bid,book)).status,200);assert.equal((await fetch(base+cover.url)).status,403);
+await req('/api/admin/poetry/books/'+bid,{...book,status:'published'});assert.equal((await fetch(base+cover.url)).status,200);const pub=(await req('/api/poetry/books/'+bid)).body;assert.equal(pub.date,book.date);assert.equal(pub.cover,book.cover);
+await req('/api/admin/poetry/books/'+bid,{...book,date:'2021-03-04',status:'published'});assert.equal((await req('/api/poetry/books/'+bid)).body.date,'2021-03-04');
+await req('/api/admin/media/'+cover.id,{},'DELETE');assert.equal((await req('/api/poetry/books/'+bid)).body.cover,'');assert.equal((await fetch(base+cover.url)).status,404);
+assert.equal((await fetch(base+'/steam')).status,410);assert.equal((await req('/api/steam')).status,404);console.log('PASS: food validation/privacy, poetry cover access/date/delete cleanup, Steam removed');

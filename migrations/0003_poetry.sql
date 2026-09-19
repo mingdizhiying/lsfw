@@ -1,0 +1,3 @@
+CREATE TABLE poetry_books(id TEXT PRIMARY KEY,title TEXT NOT NULL,description TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published')),position INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL);
+CREATE TABLE poems(id TEXT PRIMARY KEY,book_id TEXT NOT NULL REFERENCES poetry_books(id),title TEXT NOT NULL,body TEXT NOT NULL DEFAULT '',date TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','published')),position INTEGER NOT NULL DEFAULT 0,updated_at TEXT NOT NULL);
+CREATE INDEX idx_poems_book ON poems(book_id,status,position,date);

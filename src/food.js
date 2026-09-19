@@ -1,0 +1,7 @@
+import {plain,validDate,today} from './security.js';
+export function foodRoutes(app){
+ const q=(c,s,...a)=>c.env.DB.prepare(s).bind(...a);
+ app.get('/api/food',async c=>c.json((await q(c,"SELECT * FROM food_records WHERE status='published' ORDER BY province,city,date DESC,updated_at DESC").all()).results));
+ app.get('/api/admin/food',async c=>c.json((await q(c,'SELECT * FROM food_records ORDER BY updated_at DESC').all()).results));
+ app.put('/api/admin/food/:id',async c=>{const b=await c.req.json(),id=c.req.param('id'),rating=Number(b.rating),date=b.date||today();if(!/^[a-z\d-]{1,80}$/i.test(id)||!plain(b.title)||!plain(b.province)||!plain(b.city)||b.rating===''||!Number.isFinite(rating)||rating<0||rating>5||!validDate(date))return c.json({error:'请填写名称、省份、城市、有效日期及 0–5 分评分。'},400);await q(c,'INSERT INTO food_records(id,title,province,city,address,rating,body,date,status,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,province=excluded.province,city=excluded.city,address=excluded.address,rating=excluded.rating,body=excluded.body,date=excluded.date,status=excluded.status,updated_at=excluded.updated_at',id,plain(b.title).slice(0,160),plain(b.province).slice(0,40),plain(b.city).slice(0,40),plain(b.address).slice(0,300),rating,String(b.body||'').slice(0,20000),date,b.status==='published'?'published':'draft',new Date().toISOString()).run();return c.json({id})});
+}

@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+const origin='http://127.0.0.1:8790';let cookie='';
+async function req(path,body,method=body?'POST':'GET',auth=true){const r=await fetch(origin+path,{method,headers:{Origin:origin,...(auth?{Cookie:cookie}:{}),...(body&&!(body instanceof FormData)?{'Content-Type':'application/json'}:{})},body:body instanceof FormData?body:body?JSON.stringify(body):undefined});return {status:r.status,body:await r.json(),cookie:r.headers.get('set-cookie')}}
+const auth=await req('/api/auth/status');let login;
+if(!auth.body.initialized)login=await req('/api/auth/setup',{token:'local-testing-only-not-for-production',password:'local-test-password-98765'});
+else login=await req('/api/auth/login',{email:(process.env.TEST_ADMIN_EMAIL||'admin@example.com'),password:'local-test-password-98765'});
+assert.equal(login.status,200);cookie=login.cookie.split(';')[0];
+const draft={kind:'album',title:'Photo QA',date:'2026-09-18',body:'',status:'published'};
+const album=(await req('/api/admin/entries',draft)).body.id;
+const other=(await req('/api/admin/entries',{...draft,title:'Other album'})).body.id;
+const fd=new FormData();fd.set('file',new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX1sAAAAASUVORK5CYII=','base64')],{type:'image/png'}),'test.png');fd.set('entry_id',album);
+const photo=(await req('/api/admin/media',fd)).body;
+await req('/api/admin/entries/'+album,{...draft,cover:photo.url,body:'<p>Keep this text</p><img src="'+photo.url+'">'},'PUT');
+assert.equal((await req('/api/admin/media/'+photo.id,{},'DELETE',false)).status,401);
+await req('/api/comments',{entry_id:album,nickname:'Album test',message:'Only in this album'});
+let comments=(await req('/api/admin/comments')).body;const comment=comments.find(c=>c.entry_id===album);
+assert.equal((await req('/api/comments?entry='+album)).body.length,0);
+await req('/api/admin/comments/'+comment.id,{status:'approved'},'PUT');
+assert.equal((await req('/api/comments?entry='+album)).body.length,1);
+assert.equal((await req('/api/comments?entry='+other)).body.length,0);
+assert.equal((await req('/api/comments')).body.some(c=>c.id===comment.id),false);
+assert.equal((await req('/api/admin/media/'+photo.id,{},'DELETE')).status,200);
+const after=(await req('/api/admin/entries/'+album)).body;
+assert.equal(after.cover,'');assert.equal(after.photos.length,0);assert.doesNotMatch(after.body,/<img/);assert.match(after.body,/Keep this text/);
+assert.equal((await fetch(origin+photo.url)).status,404);
+assert.equal((await req('/api/admin/media/'+photo.id,{},'DELETE')).status,200);
+console.log('PASS: authorized deletion, reference cleanup, repeat deletion, album comment isolation and moderation.');
+console.log('Local QA album: '+origin+'/entry/'+album);

@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "feiwen",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-18",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "account_id": "YOUR_CLOUDFLARE_ACCOUNT_ID",
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "html_handling": "none"
+  },
+  "vars": {
+    "SITE_ORIGIN": "https://lsfw.top",
+    "BANGUMI_USER": "1063113",
+    "ADMIN_EMAIL": "admin@example.com"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lsfw-content",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "lsfw-media"
+    }
+  ]
+}
