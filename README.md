@@ -1,6 +1,6 @@
 # 岚山飞文
 
-网站：https://lsfw.top/　管理：https://lsfw.top/admin
+网站：https://lsfw.top/　管理：https://lsfw.top/admin 由 gpt生成
 
 当前部署：文字、打卡、评论、Bangumi 与 R2 照片存储已上线；邮件发送服务尚未配置。
 
