@@ -10,6 +10,7 @@ export async function deleteMedia(c, query, profile) {
   const statements=rows.map(e=>query(c,'UPDATE entries SET body=?,cover=?,updated_at=? WHERE id=?',e.body.replace(imagePattern,''),e.cover===url?'':e.cover,new Date().toISOString(),e.id));
   const p=await profile(c);
   if(p.avatar===url){p.avatar='';statements.push(query(c,"UPDATE settings SET value=? WHERE key='profile'",JSON.stringify(p)))}
+  statements.push(query(c,"UPDATE poems SET cover='' WHERE cover=?",url));
   statements.push(query(c,"UPDATE poetry_books SET cover='' WHERE cover=?",url));
   statements.push(query(c,'DELETE FROM media WHERE id=?',id));
   // Delete the object first; a failed DB update can safely be retried.
