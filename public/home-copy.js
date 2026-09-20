@@ -1,4 +1,6 @@
 export const homeFields={
+  poetryEyebrow:['首页诗集','栏目小标题','04 / POETRY'],poetryTitle:['首页诗集','栏目标题','把心事，写成诗'],poetryLink:['首页诗集','全部诗集入口','翻开诗集 →'],poetryBooksLabel:['首页诗集','诗集小标题','最近使用的诗集'],poetryPoemsLabel:['首页诗集','单诗小标题','最新的诗'],poetryEmpty:['首页诗集','空白提示','诗页暂且留白。'],poetryError:['首页诗集','读取失败提示','诗页暂时无法读取，请稍后再来。'],
+
   navFood:['网站与导航','美食导航','美食'],
   subtitle:['网站与导航','网站副标题','生活手记'],
   navBlog:['网站与导航','博客导航','博客'],navNotes:['网站与导航','说说导航','说说'],navPoetry:['网站与导航','诗集导航','诗集'],navAlbums:['网站与导航','相册导航','相册'],navProjects:['网站与导航','项目导航','项目'],navBangumi:['网站与导航','Bangumi 导航','Bangumi'],navLife:['网站与导航','日常导航','日常'],navGuestbook:['网站与导航','留言导航','留言'],
