@@ -3,7 +3,7 @@ export const clean = (html) => sanitize(String(html||''), {
   allowedTags: ['p','br','h2','h3','h4','strong','b','em','i','u','s','blockquote','ul','ol','li','pre','code','a','img','hr','table','thead','tbody','tr','th','td'],
   allowedAttributes: {a:['href','title'],img:['src','alt'],th:['colspan','rowspan'],td:['colspan','rowspan']},
   allowedSchemes: ['https','http','mailto'], allowProtocolRelative:false,
-  transformTags: {a:sanitize.simpleTransform('a',{rel:'noopener noreferrer',target:'_blank'})},
+  transformTags: {div:sanitize.simpleTransform('p',{}),a:sanitize.simpleTransform('a',{rel:'noopener noreferrer',target:'_blank'})},
   exclusiveFilter: frame => frame.tag==='img' && !/^\/media\/[a-zA-Z0-9-]+$/.test(frame.attribs.src||'')
 });
 export const plain=(s)=>sanitize(String(s||''),{allowedTags:[],allowedAttributes:{}}).trim();
