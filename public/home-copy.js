@@ -1,4 +1,5 @@
 export const homeFields={
+ navGames:['网站与导航','游戏导航','游戏'],gamesEyebrow:['游戏橱窗','栏目小标题','05 / PLAY & REMEMBER'],gamesTitle:['游戏橱窗','栏目标题','游戏橱窗'],gamesLink:['游戏橱窗','全部游戏链接','走进游戏橱窗 →'],gamesEmpty:['游戏橱窗','空白提示','玩过的故事，会慢慢摆在这里。'],gamesError:['游戏橱窗','读取失败提示','游戏橱窗暂时无法打开，请稍后再来。'],
   poetryEyebrow:['首页诗集','栏目小标题','04 / POETRY'],poetryTitle:['首页诗集','栏目标题','把心事，写成诗'],poetryLink:['首页诗集','全部诗集入口','翻开诗集 →'],poetryBooksLabel:['首页诗集','诗集小标题','最近使用的诗集'],poetryPoemsLabel:['首页诗集','单诗小标题','最新的诗'],poetryEmpty:['首页诗集','空白提示','诗页暂且留白。'],poetryError:['首页诗集','读取失败提示','诗页暂时无法读取，请稍后再来。'],
 
   navFood:['网站与导航','美食导航','美食'],
