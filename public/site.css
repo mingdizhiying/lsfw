@@ -61,3 +61,12 @@ dialog:not([open]),#lightbox:not([open]){display:none!important}
 .poem-page.poem-image-led>.page-heading{position:absolute;left:36px;right:36px;bottom:52px;z-index:2;margin:0;padding:0;text-align:left}.poem-page.poem-image-led .page-heading .eyebrow{display:none}.poem-page.poem-image-led h1{font-size:36px;line-height:1.5;margin:0;text-shadow:0 2px 8px #0005;overflow-wrap:anywhere}
 .poem-page.poem-image-led>time{position:absolute;left:36px;bottom:24px;z-index:2}.poem-page.poem-image-led>.poem-lines{display:none}
 @media(max-width:600px){.poem-page.poem-image-led>.poetry-backdrop{min-height:230px;max-height:75vh}.poem-page.poem-image-led>.page-heading{left:22px;right:22px;bottom:48px}.poem-page.poem-image-led h1{font-size:27px}.poem-page.poem-image-led>time{left:22px;bottom:20px}}
+/* Image-only poems: keep the heading and date at the top of the picture. */
+.poem-page.poem-image-led:after{background:linear-gradient(rgba(18,24,17,.72) 0%,transparent 55%)}
+.poem-page.poem-image-led>.page-heading{position:relative;left:auto;right:auto;bottom:auto;padding:28px 36px 0;z-index:2}
+.poem-page.poem-image-led>time{position:relative;display:block;left:auto;bottom:auto;padding:8px 36px 26px;z-index:2}
+.poem-page.poem-image-led{display:grid;grid-template-columns:1fr;grid-template-rows:auto auto 1fr}
+.poem-page.poem-image-led>.poetry-backdrop{grid-column:1;grid-row:1/4;width:100%;align-self:stretch}
+.poem-page.poem-image-led>.page-heading{grid-column:1;grid-row:1;align-self:start}
+.poem-page.poem-image-led>time{grid-column:1;grid-row:2;align-self:start}
+@media(max-width:600px){.poem-page.poem-image-led>.page-heading{left:auto;right:auto;bottom:auto;padding:22px 22px 0}.poem-page.poem-image-led>time{left:auto;bottom:auto;padding:7px 22px 20px}}
