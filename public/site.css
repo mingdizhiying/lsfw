@@ -71,3 +71,10 @@ dialog:not([open]),#lightbox:not([open]){display:none!important}
 .poem-page.poem-image-led>time{grid-column:1;grid-row:2;align-self:start}
 @media(max-width:600px){.poem-page.poem-image-led>.page-heading{left:auto;right:auto;bottom:auto;padding:22px 22px 0}.poem-page.poem-image-led>time{left:auto;bottom:auto;padding:7px 22px 20px}}
 .poem-page.illustrated.poem-image-led{display:grid}
+/* Image-only poems preserve the entire original image, with metadata above it. */
+.poem-page.illustrated.poem-image-led{display:flex;flex-direction:column;background:transparent;overflow:visible;isolation:auto;max-width:900px}
+.poem-page.illustrated.poem-image-led:after{display:none}
+.poem-page.illustrated.poem-image-led>.page-heading{position:static;order:0;padding:0;margin:0;text-align:left}
+.poem-page.illustrated.poem-image-led h1{color:var(--ink);text-shadow:none}
+.poem-page.illustrated.poem-image-led>time{position:static;order:1;padding:10px 0 24px;color:var(--muted)}
+.poem-page.illustrated.poem-image-led>.poetry-backdrop{position:static;order:2;display:block;width:100%;height:auto;min-height:0;max-height:none;object-fit:contain;filter:none;align-self:auto;z-index:auto;margin:0}
