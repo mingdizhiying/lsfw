@@ -54,3 +54,13 @@ dialog:not([open]),#lightbox:not([open]){display:none!important}
 .game-back{-webkit-transform:rotateY(180deg);transform:rotateY(180deg)}
 .game-front img{position:absolute;inset:0;width:100%;height:100%;max-height:none}
 @supports not (perspective:1200px){.game-back{visibility:hidden}.is-flipped .game-back{visibility:visible;transform:none}.is-flipped .game-front{visibility:hidden}}
+/* Covers without an introduction let the photograph set the composition. */
+.poetry-books{align-items:start}.poetry-image-led.poetry-book,.poetry-image-led.poetry-hero,.home-poetry-books .poetry-image-led.poetry-book{display:block;position:relative;padding:0;min-height:0;background:#30352f;text-align:left;overflow:hidden}
+.poetry-image-led.illustrated>.poetry-backdrop{position:relative;inset:auto;display:block;width:100%;height:auto;min-height:260px;max-height:560px;object-fit:contain;filter:none;z-index:0;margin:0}
+.poetry-image-led.illustrated:after{z-index:1;background:linear-gradient(transparent 45%,rgba(18,24,17,.72) 100%)}
+.poetry-image-led.poetry-book>h2{position:absolute;z-index:2;left:28px;right:28px;bottom:46px;margin:0;font-size:30px;text-shadow:0 2px 8px #0005}
+.poetry-image-led.poetry-book>small{position:absolute;z-index:2;left:28px;right:28px;bottom:20px;margin:0;padding:0}
+.poetry-image-led.poetry-book>.eyebrow,.poetry-image-led.poetry-book>p:empty{display:none}
+.home-poetry-books .poetry-image-led.poetry-book>h2{bottom:26px}
+.poetry-image-led.poetry-hero>.page-heading{position:absolute;z-index:2;left:36px;right:36px;bottom:48px;margin:0;padding:0}.poetry-image-led.poetry-hero .eyebrow{display:none}.poetry-image-led.poetry-hero h1{margin:0;font-size:38px}.poetry-image-led.poetry-hero>.small{position:absolute;z-index:2;left:36px;bottom:20px;margin:0}.poetry-image-led.poetry-hero>.poetry-description{display:none}
+@media(max-width:600px){.poetry-image-led.illustrated>.poetry-backdrop{min-height:220px;max-height:70vh}.poetry-image-led.poetry-book>h2{font-size:25px;left:20px;right:20px;bottom:46px}.poetry-image-led.poetry-book>small{left:20px;right:20px;font-size:10px}.poetry-image-led.poetry-hero>.page-heading{left:22px;right:22px}.poetry-image-led.poetry-hero h1{font-size:30px}.poetry-image-led.poetry-hero>.small{left:22px}}
