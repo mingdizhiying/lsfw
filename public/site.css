@@ -54,3 +54,10 @@ dialog:not([open]),#lightbox:not([open]){display:none!important}
 .game-back{-webkit-transform:rotateY(180deg);transform:rotateY(180deg)}
 .game-front img{position:absolute;inset:0;width:100%;height:100%;max-height:none}
 @supports not (perspective:1200px){.game-back{visibility:hidden}.is-flipped .game-back{visibility:visible;transform:none}.is-flipped .game-front{visibility:hidden}}
+/* An illustrated poem without body text is presented as a photograph. */
+.poem-page.illustrated.poem-image-led{position:relative;display:block;padding:0;min-height:0;width:100%;max-width:900px;margin:30px auto;background:#30352f;overflow:hidden}
+.poem-page.poem-image-led>.poetry-backdrop{position:relative;inset:auto;display:block;width:100%;height:auto;min-height:260px;max-height:78vh;object-fit:contain;filter:none;z-index:0;margin:0}
+.poem-page.poem-image-led:after{z-index:1;background:linear-gradient(transparent 55%,rgba(18,24,17,.72) 100%)}
+.poem-page.poem-image-led>.page-heading{position:absolute;left:36px;right:36px;bottom:52px;z-index:2;margin:0;padding:0;text-align:left}.poem-page.poem-image-led .page-heading .eyebrow{display:none}.poem-page.poem-image-led h1{font-size:36px;line-height:1.5;margin:0;text-shadow:0 2px 8px #0005;overflow-wrap:anywhere}
+.poem-page.poem-image-led>time{position:absolute;left:36px;bottom:24px;z-index:2}.poem-page.poem-image-led>.poem-lines{display:none}
+@media(max-width:600px){.poem-page.poem-image-led>.poetry-backdrop{min-height:230px;max-height:75vh}.poem-page.poem-image-led>.page-heading{left:22px;right:22px;bottom:48px}.poem-page.poem-image-led h1{font-size:27px}.poem-page.poem-image-led>time{left:22px;bottom:20px}}
