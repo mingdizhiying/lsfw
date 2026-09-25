@@ -78,3 +78,12 @@ dialog:not([open]),#lightbox:not([open]){display:none!important}
 .poem-page.illustrated.poem-image-led h1{color:var(--ink);text-shadow:none}
 .poem-page.illustrated.poem-image-led>time{position:static;order:1;padding:10px 0 24px;color:var(--muted)}
 .poem-page.illustrated.poem-image-led>.poetry-backdrop{position:static;order:2;display:block;width:100%;height:auto;min-height:0;max-height:none;object-fit:contain;filter:none;align-self:auto;z-index:auto;margin:0}
+
+/* Each guestbook message sits inside a soft rounded frame. */
+.guestbook-comments #comment-list{display:grid;gap:20px;margin-top:24px}
+.guestbook-comments .comment{border:1px solid #c7cdbb;border-radius:32px;padding:24px 30px;background:rgba(255,252,246,.65);min-width:0}
+.guestbook-comments .comment strong{overflow-wrap:anywhere}
+.guestbook-comments .comment time{flex-shrink:0}
+.guestbook-comments .comment>p{margin-bottom:0}
+.guestbook-comments .comment blockquote{border-radius:18px}
+@media(max-width:600px){.guestbook-comments .comment{border-radius:26px;padding:20px}.guestbook-comments #comment-list{gap:16px}}
