@@ -87,3 +87,4 @@ dialog:not([open]),#lightbox:not([open]){display:none!important}
 .guestbook-comments .comment>p{margin-bottom:0}
 .guestbook-comments .comment blockquote{border-radius:18px}
 @media(max-width:600px){.guestbook-comments .comment{border-radius:26px;padding:20px}.guestbook-comments #comment-list{gap:16px}}
+.r2-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.r2-stats .stat{min-width:0}.r2-stats strong{font-size:26px;overflow-wrap:anywhere}.r2-meter{width:100%;height:14px;accent-color:#77856b}.r2-requests{border-top:1px solid var(--line);margin-top:20px;padding-top:8px}@media(max-width:600px){.r2-stats{grid-template-columns:1fr}.r2-stats .stat{padding:16px}}
