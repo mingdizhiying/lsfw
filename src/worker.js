@@ -1,3 +1,4 @@
+import {r2Analytics} from './r2-analytics.js';
 import {r2Usage} from './r2-usage.js';
 import {gameRoutes} from './games.js';
 import {defaultHomeCopy} from '../public/home-copy.js';
@@ -43,6 +44,7 @@ poetryRoutes(app);
 foodRoutes(app);
 gameRoutes(app);
 app.get('/api/admin/r2-usage',r2Usage);
+app.get('/api/admin/r2-analytics',r2Analytics);
 app.get('/api/admin/overview',async c=>c.json({counts:await all(c,'SELECT kind,status,COUNT(*) AS count FROM entries GROUP BY kind,status'),pending:(await query(c,"SELECT COUNT(*) AS n FROM comments WHERE status='pending'").first()).n,mailConfigured:!!(c.env.RESEND_API_KEY&&c.env.MAIL_FROM),mailPending:(await query(c,"SELECT COUNT(*) AS n FROM mail_outbox WHERE status='pending'").first()).n,storageReady:!!c.env.MEDIA,email:c.env.ADMIN_EMAIL}));
 app.put('/api/admin/profile',async c=>{const b=await data(c);const p={name:plain(b.name).slice(0,40)||defaults.name,nickname:plain(b.nickname).slice(0,30)||'飞文',intro:plain(b.intro).slice(0,300),bio:plain(b.bio).slice(0,2000),tags:(Array.isArray(b.tags)?b.tags:[]).slice(0,12).map(x=>plain(x).slice(0,20)),avatar:/^\/media\/[a-zA-Z0-9-]+$/.test(b.avatar)?b.avatar:'',email:b.email&&emailValid(b.email)?b.email:'',socials:(Array.isArray(b.socials)?b.socials:[]).slice(0,10).map(s=>({name:plain(s.name).slice(0,30),url:safeLink(s.url)})).filter(s=>s.url)};await query(c,"INSERT INTO settings(key,value) VALUES('profile',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",JSON.stringify(p)).run();return c.json(p)});
 app.post('/api/admin/password',async c=>{const b=await data(c);const a=await query(c,'SELECT password_hash FROM admin WHERE id=1').first();if(!await verifyPassword(b.current,a.password_hash))fail('当前密码不正确。');if(typeof b.password!=='string'||b.password.length<12||b.password.length>128)fail('新密码须为12–128个字符。');await c.env.DB.batch([query(c,'UPDATE admin SET password_hash=? WHERE id=1',await hashPassword(b.password)),query(c,'DELETE FROM sessions')]);return login(c)});
