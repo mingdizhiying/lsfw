@@ -9,7 +9,7 @@ export function bindRecords(root){
  const state=(playing,text)=>{card.classList.toggle('playing',playing);button.setAttribute('aria-pressed',String(playing));button.setAttribute('aria-label',(playing?'暂停 ':'播放 ')+card.querySelector('h2').textContent);action.textContent=playing?'Ⅱ':'▶';status.textContent=text};
  button.onclick=async()=>{if(!audio.paused){audio.pause();return}status.textContent='正在连接唱片…';if(slot){clearTimeout(timer);timer=setTimeout(()=>{if(audio.readyState<3)fallback()},10000)}try{await audio.play()}catch{state(false,'暂时无法站内播放，可前往网易云收听。');fallback()}};
  audio.onplay=()=>{cards.forEach(other=>{if(other!==card)other.querySelector('audio').pause()})};
- audio.onplaying=()=>{clearTimeout(timer);state(true,'正在播放')};audio.onpause=()=>state(false,'已暂停');audio.onended=()=>state(false,'播放完毕');audio.onwaiting=()=>state(false,'正在缓冲…');audio.onerror=()=>{state(false,'此歌曲暂不可站内播放，可前往网易云收听。');fallback()};
+ audio.onplaying=()=>{clearTimeout(timer);state(true,'正在播放')};audio.onpause=()=>state(false,slot&&!slot.hidden?'已切换至 Spotify 备用试听。':'已暂停');audio.onended=()=>state(false,'播放完毕');audio.onwaiting=()=>state(false,'正在缓冲…');audio.onerror=()=>{state(false,'此歌曲暂不可站内播放，可前往网易云收听。');fallback()};
  });
  window.addEventListener('pagehide',()=>cards.forEach(c=>c.querySelector('audio').pause()),{once:true});
 }
