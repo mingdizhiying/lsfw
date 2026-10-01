@@ -1,6 +1,6 @@
 import snapshot from './release-snapshot.js';
 export const releaseProjectId='website-release-history';
-export const releaseSource='https://raw.githubusercontent.com/mingdizhiying/lsfw/main/RELEASES.md';
+export const releaseSource='https://api.github.com/repos/mingdizhiying/lsfw/contents/RELEASES.md?ref=main';
 const repo='https://github.com/mingdizhiying/lsfw';
 const escape=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function releaseBody(markdown){
@@ -13,19 +13,19 @@ export function releaseBody(markdown){
 }
 export async function syncReleaseProject(c){
  const db=c.env.DB;
- const cached=await db.prepare('SELECT expires_at FROM cache WHERE key=?').bind('release-history:sync').first();
+ const cached=await db.prepare('SELECT expires_at FROM cache WHERE key=?').bind('release-history:sync:api').first();
  if(cached?.expires_at>Date.now())return;
  const old=await db.prepare('SELECT body FROM entries WHERE id=?').bind(releaseProjectId).first();
  let source=snapshot,ttl=60000;
  try{
-  const response=await fetch(releaseSource,{headers:{'User-Agent':'lsfw-release-history'},signal:AbortSignal.timeout(5000),cf:{cacheTtl:60}});
+  const response=await fetch(releaseSource,{headers:{'User-Agent':'lsfw-release-history',Accept:'application/vnd.github.raw+json'},signal:AbortSignal.timeout(5000),cf:{cacheTtl:60}});
   if(!response.ok)throw Error('GitHub unavailable');
   source=await response.text();releaseBody(source);ttl=300000;
  }catch{
-  if(old){await db.prepare('INSERT OR REPLACE INTO cache(key,value,expires_at) VALUES(?,?,?)').bind('release-history:sync','{}',Date.now()+ttl).run();return;}
+  if(old){await db.prepare('INSERT OR REPLACE INTO cache(key,value,expires_at) VALUES(?,?,?)').bind('release-history:sync:api','{}',Date.now()+ttl).run();return;}
  }
  const body=releaseBody(source),stamp=new Date().toISOString();
  const date=[...source.matchAll(/20\d{2}-\d{2}-\d{2}/g)].map(m=>m[0]).sort().at(-1)||'2026-09-19';
  if(old?.body!==body)await db.prepare(`INSERT INTO entries(id,kind,title,body,excerpt,tags,date,status,link,created_at,updated_at) VALUES(?,'project',?,?,?,?,?,'published',?,?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body,excerpt=excluded.excerpt,date=excluded.date,updated_at=excluded.updated_at`).bind(releaseProjectId,'网站版本记录',body,'岚山飞文的发布记录、功能更新与回滚历史，与 GitHub 自动同步。','["网站","版本记录"]',date,repo,stamp,stamp).run();
- await db.prepare('INSERT OR REPLACE INTO cache(key,value,expires_at) VALUES(?,?,?)').bind('release-history:sync','{}',Date.now()+ttl).run();
+ await db.prepare('INSERT OR REPLACE INTO cache(key,value,expires_at) VALUES(?,?,?)').bind('release-history:sync:api','{}',Date.now()+ttl).run();
 }
