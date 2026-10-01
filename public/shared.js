@@ -1,7 +1,7 @@
 export const $=(s,root=document)=>root.querySelector(s);
 export const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const textLines=v=>esc(v).replace(/\n/g,'<br>');
-export function safeImage(v){return /^\/media\/[a-z\d-]+$/i.test(v)||/^https:\/\/lain\.bgm\.tv\//.test(v)?v:''}
+export function safeImage(v){return /^https:\/\/shared\.fastly\.steamstatic\.com\/store_item_assets\/steam\/apps\/\d+\/library_600x900\.jpg$/.test(v)||/^\/media\/[a-z\d-]+$/i.test(v)||/^https:\/\/lain\.bgm\.tv\//.test(v)?v:''}
 export function safeURL(v){try{const u=new URL(v,location.origin);return ['https:','http:'].includes(u.protocol)?u.href:'#'}catch{return '#'}}
 export function html(v){return DOMPurify.sanitize(v||'',{ADD_ATTR:['target'],FORBID_TAGS:['style','script','iframe','form','input','button'],FORBID_ATTR:['style']})}
 export async function api(path,options={}){const headers={...(options.body&&! (options.body instanceof FormData)?{'Content-Type':'application/json'}:{}),...options.headers};const r=await fetch(path,{credentials:'same-origin',...options,headers});let b;try{b=await r.json()}catch{throw Error('服务器响应异常，请稍后重试。')}if(!r.ok)throw Object.assign(Error(b.error||'暂时无法完成操作'),{status:r.status,data:b});return b}
