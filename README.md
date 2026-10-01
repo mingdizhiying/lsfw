@@ -46,3 +46,11 @@ Node.js 22+。`npm ci` 安装依赖；`npm run check`、`npm test` 检查；`npm
 克隆后将 wrangler.example.jsonc 复制为 wrangler.jsonc，填入自己的 Cloudflare 账号、D1 数据库 ID 与管理员邮箱。真实配置不入 Git。现有电脑已配置，无需覆盖。
 参见 [ROLLBACK.md](ROLLBACK.md) 和 [RELEASES.md](RELEASES.md)。GitHub Actions 仅运行检查，不自动发布。首次基线标签为 v1.0.0。
 本地接口测试通过 TEST_ADMIN_EMAIL 指定测试管理员邮箱；不要对生产站点运行写入测试。
+
+## 网站版本记录自动同步
+
+项目入口：`/entry/website-release-history`，自动出现在 `/projects` 中。
+`RELEASES.md` 是唯一发布记录源。每次发布或回滚，都追加实际变更、验证结果和版本信息，并推送 GitHub main；不要提前把未上线的变更写成已发布。
+网站在访问项目列表或该详情时自动检查 GitHub，成功缓存 5 分钟；无需手动复制到后台。后台正文由同步程序管理，请在 GitHub 文件中修改记录。其他项目不受影响。
+GitHub 故障时保留 D1 中最后成功记录；首次访问无记录时使用部署内置快照，1 分钟后再尝试。
+Wrangler 每次构建会运行 `scripts/build-releases.mjs` 刷新快照；不需要额外 GitHub 或 Cloudflare 密钥。此同步仅更新发布记录，不自动部署网站代码。

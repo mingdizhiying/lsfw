@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "feiwen",
   "main": "src/worker.js",
+  "build": {"command": "node scripts/build-releases.mjs"},
   "compatibility_date": "2026-09-18",
   "compatibility_flags": [
     "nodejs_compat"
