@@ -24,11 +24,13 @@ export async function readSong(value,request=fetch){
  const d=await r.json(),s=d.songs?.find(s=>String(s.id)===id);if(!s?.name)throw Error('歌曲不存在或暂时无法读取。');
  return {id,title:String(s.name).slice(0,200),artist:(s.artists||[]).map(a=>a.name).join(' / ').slice(0,300),album:String(s.album?.name||'').slice(0,200),cover:musicCover(s.album?.picUrl),url:'https://music.163.com/song?id='+id};
 }
+export function normalizeMusicTags(value){return [...new Set((Array.isArray(value)?value:String(value||'').split(/[,，]/)).map(x=>String(x).trim().slice(0,30)).filter(Boolean))].slice(0,12);}
+const packMusic=row=>({...row,pinned:!!row.pinned,tags:normalizeMusicTags(JSON.parse(row.tags||'[]'))});
 export function musicRoutes(app){
- app.get('/api/music',async c=>c.json((await q(c,"SELECT * FROM music_tracks WHERE status='published' ORDER BY updated_at DESC,id DESC").all()).results));
- app.get('/api/admin/music',async c=>c.json((await q(c,'SELECT * FROM music_tracks ORDER BY updated_at DESC').all()).results));
+ app.get('/api/music',async c=>c.json((await q(c,"SELECT * FROM music_tracks WHERE status='published' ORDER BY pinned DESC,updated_at DESC,id DESC").all()).results.map(packMusic)));
+ app.get('/api/admin/music',async c=>c.json((await q(c,'SELECT * FROM music_tracks ORDER BY pinned DESC,updated_at DESC,id DESC').all()).results.map(packMusic)));
  app.post('/api/admin/music/resolve',async c=>{try{const b=await c.req.json();return c.json(await readSong(b.url))}catch(e){return c.json({error:e.message||'无法读取歌曲。'},400)}});
  app.put('/api/admin/music/:id',async c=>{const id=c.req.param('id'),b=await c.req.json();if(!/^\d{1,16}$/.test(id)||typeof b.title!=='string'||!b.title.trim()||b.cover&&!musicCover(b.cover))return c.json({error:'请先读取有效歌曲，检查名称和封面。'},400);
- await q(c,'INSERT INTO music_tracks(id,title,artist,album,cover,review,status,updated_at) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,artist=excluded.artist,album=excluded.album,cover=excluded.cover,review=excluded.review,status=excluded.status,updated_at=excluded.updated_at',id,b.title.trim().slice(0,200),String(b.artist||'').slice(0,300),String(b.album||'').slice(0,200),musicCover(b.cover),String(b.review||'').slice(0,3000),b.status==='published'?'published':'draft',new Date().toISOString()).run();return c.json({id});
+ await q(c,'INSERT INTO music_tracks(id,title,artist,album,cover,review,status,updated_at,pinned,tags) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET title=excluded.title,artist=excluded.artist,album=excluded.album,cover=excluded.cover,review=excluded.review,status=excluded.status,updated_at=excluded.updated_at,pinned=excluded.pinned,tags=excluded.tags',id,b.title.trim().slice(0,200),String(b.artist||'').slice(0,300),String(b.album||'').slice(0,200),musicCover(b.cover),String(b.review||'').slice(0,3000),b.status==='published'?'published':'draft',new Date().toISOString(),b.pinned===true||b.pinned===1?1:0,JSON.stringify(normalizeMusicTags(b.tags))).run();return c.json({id});
  });
 }

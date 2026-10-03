@@ -25,3 +25,10 @@ test('vinyl follows actual playback, pauses other tracks and stops on errors',as
  function make(){const c=card();c.classList.toggle=(_,value)=>c.playing=value;return c;}
  const a=make(),b=make();try{bindRecords({querySelectorAll:()=>[a,b]});await a.nodes.button.onclick();assert.equal(a.playing,false);a.nodes.audio.duration=120;a.nodes.audio.currentTime=30;a.nodes.audio.ontimeupdate();assert.equal(a.nodes['.record-seek'].value,'25');assert.equal(a.nodes['.record-time'].textContent,'0:30 / 2:00');a.nodes['.record-seek'].value='50';a.nodes['.record-seek'].oninput();assert.equal(a.nodes.audio.currentTime,60);a.nodes.audio.onplaying();assert.equal(a.playing,true);await b.nodes.button.onclick();assert.equal(a.playing,false);b.nodes.audio.onplaying();assert.equal(b.playing,true);b.nodes.audio.onwaiting();assert.equal(b.playing,false);b.nodes.audio.onerror();assert.equal(b.playing,false);assert.match(b.nodes['.record-status'].textContent,/暂不可/);}finally{globalThis.window=old;}
 });
+import {normalizeMusicTags} from '../src/music.js';
+import {filterMusic} from '../public/music.js';
+test('music tags normalize and pinned order remains within each filter',()=>{
+ assert.deepEqual(normalizeMusicTags('动漫衍生，其他,动漫衍生, '),['动漫衍生','其他']);
+ const rows=[{id:'1',pinned:false,tags:['动漫衍生'],updated_at:'2026-10-03'},{id:'2',pinned:true,tags:['动漫衍生'],updated_at:'2026-09-01'},{id:'3',pinned:false,tags:[],updated_at:'2026-10-04'}];
+ assert.deepEqual(filterMusic(rows,'动漫衍生').map(x=>x.id),['2','1']);assert.deepEqual(filterMusic(rows,'其他').map(x=>x.id),['3']);assert.deepEqual(filterMusic(rows,'不存在'),[]);assert.equal(filterMusic(rows)[0].id,'2');assert.equal(rows[0].id,'1');
+});
