@@ -31,7 +31,7 @@ app.use('*',async(c,next)=>{
  }
  await next();
  c.header('X-Content-Type-Options','nosniff');c.header('Referrer-Policy','strict-origin-when-cross-origin');c.header('X-Frame-Options','DENY');
- c.header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://lain.bgm.tv https://shared.fastly.steamstatic.com https://*.music.126.net https://*.hdslb.com; media-src 'self' https://music.163.com https://*.music.126.net; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
+ c.header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://lain.bgm.tv https://shared.fastly.steamstatic.com https://*.music.126.net https://*.hdslb.com; media-src 'self' https://music.163.com https://*.music.126.net; connect-src 'self'; frame-src https://music.163.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
  if(pathname.startsWith('/api/')||pathname.startsWith('/admin')||pathname.startsWith('/media/'))c.header('Cache-Control','no-store');
 });
 app.onError((err,c)=>{console.error('Request failed',c.req.path,err.status||500);return c.json({error:err.status?err.message:'暂时无法完成操作，请稍后重试。'},err.status||500)});

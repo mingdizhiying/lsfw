@@ -23,3 +23,12 @@ test('private DNS answers and unsafe redirects never get fetched',async()=>{
 test('blocked sites preserve original link for manual editing',async()=>{
  const r=await resolveBookmark('https://example.com',async url=>url.includes('dns-query')?dns():new Response('blocked',{status:403}));assert.equal(r.url,'https://example.com/');assert.ok(r.warning);assert.equal(r.title,'');
 });
+import {readPreviewImage} from '../src/bookmarks.js';
+test('website previews resolve relative OG images and reject non-images and private redirects',async()=>{
+ const r=await resolveBookmark('https://example.com/page',async url=>url.includes('dns-query')?dns():new Response('<title>Example</title><meta property="og:image" content="/cover.png">',{headers:{'content-type':'text/html'}}));
+ assert.equal(r.cover,'https://example.com/cover.png');
+ await assert.rejects(()=>readPreviewImage('https://example.com/cover',async url=>url.includes('dns-query')?dns():new Response('<html>unsafe</html>',{headers:{'content-type':'text/html'}})));
+ await assert.rejects(()=>readPreviewImage('https://example.com/cover',async url=>url.includes('dns-query')?dns():new Response(null,{status:302,headers:{location:'http://127.0.0.1/a'}})));
+ const image=await readPreviewImage('https://example.com/cover.png',async url=>url.includes('dns-query')?dns():new Response(new Uint8Array([1,2,3]),{headers:{'content-type':'image/png'}}));
+ assert.equal(image.type,'image/png');assert.equal(image.bytes.length,3);
+});

@@ -16,16 +16,18 @@ async function checkDNS(u,request){
  const results=await Promise.all(['A','AAAA'].map(async type=>{const r=await request('https://cloudflare-dns.com/dns-query?name='+encodeURIComponent(u.hostname)+'&type='+type,{headers:{Accept:'application/dns-json'},signal:AbortSignal.timeout(4000)});if(!r.ok)throw Error('暂时无法检查网址。');return r.json()}));
  const ips=results.flatMap(r=>(r.Answer||[]).filter(a=>a.type===1||a.type===28).map(a=>a.data));if(!ips.length||ips.some(ip=>!publicIP(ip)))throw Error('无法读取此网站地址。');
 }
-async function readText(response){
- if(Number(response.headers.get('content-length'))>700000)throw Error('网页内容过大，可手动填写。');
- const reader=response.body.getReader();let size=0;const chunks=[];try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>700000)throw Error('网页内容过大，可手动填写。');chunks.push(value);}}finally{await reader.cancel();}
- const bytes=new Uint8Array(size);let at=0;for(const b of chunks){bytes.set(b,at);at+=b.length;}return new TextDecoder().decode(bytes);
+async function readBytes(response,max=700000){
+ if(Number(response.headers.get('content-length'))>max)throw Error('网页内容过大，可手动填写。');
+ const reader=response.body.getReader();let size=0;const chunks=[];try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.length;if(size>max)throw Error('网页内容过大，可手动填写。');chunks.push(value);}}finally{await reader.cancel();}
+ const bytes=new Uint8Array(size);let at=0;for(const b of chunks){bytes.set(b,at);at+=b.length;}return bytes;
 }
+async function readText(response){return new TextDecoder().decode(await readBytes(response));}
 const decode=s=>String(s||'').replace(/<[^>]*>/g,'').replace(/&(?:amp|quot|apos|lt|gt|nbsp);/g,x=>({'&amp;':'&','&quot;':'"','&apos;':"'",'&lt;':'<','&gt;':'>','&nbsp;':' '}[x])).replace(/&#(x[\da-f]+|\d+);/gi,(m,n)=>{const v=n[0].toLowerCase()==='x'?parseInt(n.slice(1),16):Number(n);return v>0&&v<=0x10ffff?String.fromCodePoint(v):'';}).trim();
 export function metadata(text){const meta={};for(const tag of text.match(/<meta\b[^>]*>/gi)||[]){const attrs={};for(const m of tag.matchAll(/([\w:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g))attrs[m[1].toLowerCase()]=m[2]??m[3]??m[4];const key=attrs.property||attrs.name;if(key)meta[key.toLowerCase()]=decode(attrs.content);}
- return {title:(meta['og:title']||decode(text.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1])).slice(0,200),description:(meta['og:description']||meta.description||'').slice(0,2000)};
+ return {...(meta['og:image']?{image:meta['og:image']}:{}),title:(meta['og:title']||decode(text.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1])).slice(0,200),description:(meta['og:description']||meta.description||'').slice(0,2000)};
 }
 export function bookmarkCover(value){try{const u=new URL(value);return u.protocol==='https:'&&/^(?:[a-z\d-]+\.)*hdslb\.com$/i.test(u.hostname)&&!u.port&&!u.username&&!u.password?u.href:'';}catch{return '';}}
+export function websiteCover(value){try{const u=bookmarkURL(value);return u.protocol==='https:'?u.href:'';}catch{return '';}}
 export async function resolveBookmark(value,request=fetch){
  let u=bookmarkURL(value);let result={url:u.href,title:'',description:'',cover:'',kind:'website'};
  try{for(let n=0;n<4;n++){
@@ -38,13 +40,38 @@ export async function resolveBookmark(value,request=fetch){
   const r=await request(u.href,{redirect:'manual',headers:{'User-Agent':'Mozilla/5.0 (compatible; LsfwBookmarks/1.0)'},signal:AbortSignal.timeout(7000)});
   if(r.status>=300&&r.status<400&&r.headers.get('location')){u=bookmarkURL(new URL(r.headers.get('location'),u).href);continue;}
   if(!r.ok||!r.headers.get('content-type')?.includes('text/html'))throw Error('网站暂不允许读取');
-  const info=metadata(await readText(r));if(!info.title)throw Error('未找到网页标题');return {...result,...info,url:result.kind==='video'?result.url:u.href};
+  const info=metadata(await readText(r));if(!info.title)throw Error('未找到网页标题');let cover='';try{if(info.image)cover=websiteCover(new URL(info.image,u).href);}catch{}return {...result,...info,cover,url:result.kind==='video'?result.url:u.href};
  }throw Error('跳转次数过多');}catch{return {...result,warning:'未能自动读取完整资料，可手动填写标题和简介后保存。'};}
 }
+export async function readPreviewImage(value,request=fetch){
+ let u=bookmarkURL(value);
+ for(let n=0;n<4;n++){
+  await checkDNS(u,request);
+  const r=await request(u.href,{redirect:'manual',signal:AbortSignal.timeout(6000),headers:{Accept:'image/avif,image/webp,image/png,image/jpeg'}});
+  if(r.status>=300&&r.status<400&&r.headers.get('location')){u=bookmarkURL(new URL(r.headers.get('location'),u).href);continue;}
+  const type=(r.headers.get('content-type')||'').split(';')[0];if(!r.ok||!['image/jpeg','image/png','image/webp','image/gif','image/avif'].includes(type))throw Error('No preview image');
+  return {bytes:await readBytes(r,2500000),type};
+ }throw Error('Too many redirects');
+}
+async function preview(c,admin=false){
+ const id=c.req.param('id'),row=await q(c,admin?'SELECT * FROM bookmarks WHERE id=?':"SELECT * FROM bookmarks WHERE id=? AND status='published'",id).first();
+ if(!row)return c.text('没有可用预览',404);
+ const cacheKey='bookmark-preview:'+id+':'+row.updated_at;
+ const cached=await q(c,'SELECT value FROM cache WHERE key=? AND expires_at>?',cacheKey,Date.now()).first();
+ let cover=row.cover;
+ if(!cover){
+  if(cached){cover=JSON.parse(cached.value).cover;if(!cover)return c.text('没有可用预览',404);}
+  else{const result=await resolveBookmark(row.url);cover=result.cover||'';await q(c,'INSERT OR REPLACE INTO cache(key,value,expires_at) VALUES(?,?,?)',cacheKey,JSON.stringify({cover}),Date.now()+86400000).run();}
+ }
+ if(!cover)return c.text('没有可用预览',404);
+ try{const image=await readPreviewImage(cover);return new Response(image.bytes,{headers:{'Content-Type':image.type,'Cache-Control':'private, max-age=3600','X-Content-Type-Options':'nosniff'}});}catch{return c.text('没有可用预览',404);}
+}
 export function bookmarkRoutes(app){
+ app.get('/api/bookmarks/:id/preview',c=>preview(c));
+ app.get('/api/admin/bookmarks/:id/preview',c=>preview(c,true));
  app.get('/api/bookmarks',async c=>c.json((await q(c,"SELECT * FROM bookmarks WHERE status='published' ORDER BY updated_at DESC").all()).results));
  app.get('/api/admin/bookmarks',async c=>c.json((await q(c,'SELECT * FROM bookmarks ORDER BY updated_at DESC').all()).results));
  app.post('/api/admin/bookmarks/resolve',async c=>{try{return c.json(await resolveBookmark((await c.req.json()).text))}catch(e){return c.json({error:e.message},400)}});
- app.put('/api/admin/bookmarks/:id',async c=>{try{const b=await c.req.json(),id=c.req.param('id');if(!/^[a-z\d-]{1,80}$/i.test(id)||!String(b.title||'').trim())throw Error('请填写标题。');const url=bookmarkURL(b.url).href;const existing=await q(c,'SELECT id FROM bookmarks WHERE url=? AND id<>?',url,id).first();if(existing)return c.json({error:'这个链接已经收藏，请编辑已有收藏。'},409);const stamp=new Date().toISOString();await q(c,`INSERT INTO bookmarks(id,url,title,description,note,category,kind,cover,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET url=excluded.url,title=excluded.title,description=excluded.description,note=excluded.note,category=excluded.category,kind=excluded.kind,cover=excluded.cover,status=excluded.status,updated_at=excluded.updated_at`,id,url,String(b.title).trim().slice(0,200),String(b.description||'').slice(0,2000),String(b.note||'').slice(0,3000),String(b.category||'').slice(0,60),b.kind==='video'?'video':'website',bookmarkCover(b.cover),b.status==='published'?'published':'draft',stamp,stamp).run();return c.json({id});}catch(e){return c.json({error:e.message},400)}});
+ app.put('/api/admin/bookmarks/:id',async c=>{try{const b=await c.req.json(),id=c.req.param('id');if(!/^[a-z\d-]{1,80}$/i.test(id)||!String(b.title||'').trim())throw Error('请填写标题。');const url=bookmarkURL(b.url).href;const existing=await q(c,'SELECT id FROM bookmarks WHERE url=? AND id<>?',url,id).first();if(existing)return c.json({error:'这个链接已经收藏，请编辑已有收藏。'},409);const stamp=new Date().toISOString();await q(c,`INSERT INTO bookmarks(id,url,title,description,note,category,kind,cover,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET url=excluded.url,title=excluded.title,description=excluded.description,note=excluded.note,category=excluded.category,kind=excluded.kind,cover=excluded.cover,status=excluded.status,updated_at=excluded.updated_at`,id,url,String(b.title).trim().slice(0,200),String(b.description||'').slice(0,2000),String(b.note||'').slice(0,3000),String(b.category||'').slice(0,60),b.kind==='video'?'video':'website',(b.kind==='video'?bookmarkCover(b.cover):websiteCover(b.cover)),b.status==='published'?'published':'draft',stamp,stamp).run();return c.json({id});}catch(e){return c.json({error:e.message},400)}});
  app.delete('/api/admin/bookmarks/:id',async c=>{await q(c,'DELETE FROM bookmarks WHERE id=?',c.req.param('id')).run();return c.json({ok:true})});
 }
