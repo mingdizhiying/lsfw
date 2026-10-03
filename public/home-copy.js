@@ -1,4 +1,5 @@
 export const homeFields={
+ navInterests:['网站与导航','兴趣分组导航','兴趣'],
  navBookmarks:['网站与导航','收藏夹导航','收藏夹'],
  navMusic:['网站与导航','音乐导航','音乐'],
  navGames:['网站与导航','游戏导航','游戏'],gamesEyebrow:['游戏橱窗','栏目小标题','05 / PLAY & REMEMBER'],gamesTitle:['游戏橱窗','栏目标题','游戏橱窗'],gamesLink:['游戏橱窗','全部游戏链接','走进游戏橱窗 →'],gamesEmpty:['游戏橱窗','空白提示','玩过的故事，会慢慢摆在这里。'],gamesError:['游戏橱窗','读取失败提示','游戏橱窗暂时无法打开，请稍后再来。'],

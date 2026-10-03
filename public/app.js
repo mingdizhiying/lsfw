@@ -1,3 +1,4 @@
+import './navigation.js';
 import {bookmarksPage} from './bookmarks.js';
 import {musicPage} from './music.js';
 import {homeMotion} from './motion.js';
