@@ -1,0 +1,2 @@
+CREATE TABLE bookmarks (id TEXT PRIMARY KEY,url TEXT NOT NULL UNIQUE,title TEXT NOT NULL,description TEXT NOT NULL DEFAULT '',note TEXT NOT NULL DEFAULT '',category TEXT NOT NULL DEFAULT '',kind TEXT NOT NULL DEFAULT 'website',cover TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'draft',created_at TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE INDEX bookmarks_public ON bookmarks(status,updated_at DESC);

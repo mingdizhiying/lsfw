@@ -1,3 +1,4 @@
+import {bookmarkRoutes} from './bookmarks.js';
 import {syncReleaseProject,releaseProjectId} from './release-history.js';
 import {musicRoutes} from './music.js';
 import {yearbookRoutes} from './anime-yearbook.js';
@@ -30,7 +31,7 @@ app.use('*',async(c,next)=>{
  }
  await next();
  c.header('X-Content-Type-Options','nosniff');c.header('Referrer-Policy','strict-origin-when-cross-origin');c.header('X-Frame-Options','DENY');
- c.header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://lain.bgm.tv https://shared.fastly.steamstatic.com https://*.music.126.net; media-src 'self' https://music.163.com https://*.music.126.net; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
+ c.header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://lain.bgm.tv https://shared.fastly.steamstatic.com https://*.music.126.net https://*.hdslb.com; media-src 'self' https://music.163.com https://*.music.126.net; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
  if(pathname.startsWith('/api/')||pathname.startsWith('/admin')||pathname.startsWith('/media/'))c.header('Cache-Control','no-store');
 });
 app.onError((err,c)=>{console.error('Request failed',c.req.path,err.status||500);return c.json({error:err.status?err.message:'暂时无法完成操作，请稍后重试。'},err.status||500)});
@@ -48,6 +49,7 @@ foodRoutes(app);
 gameRoutes(app);
 yearbookRoutes(app);
 musicRoutes(app);
+bookmarkRoutes(app);
 app.get('/api/admin/r2-usage',r2Usage);
 app.get('/api/admin/r2-analytics',r2Analytics);
 app.get('/api/admin/overview',async c=>c.json({counts:await all(c,'SELECT kind,status,COUNT(*) AS count FROM entries GROUP BY kind,status'),pending:(await query(c,"SELECT COUNT(*) AS n FROM comments WHERE status='pending'").first()).n,mailConfigured:!!(c.env.RESEND_API_KEY&&c.env.MAIL_FROM),mailPending:(await query(c,"SELECT COUNT(*) AS n FROM mail_outbox WHERE status='pending'").first()).n,storageReady:!!c.env.MEDIA,email:c.env.ADMIN_EMAIL}));
@@ -87,6 +89,6 @@ app.get('/steam.js',c=>c.text('此页面已移除。',410));
 app.get('/api/bangumi/profile',async c=>c.json(await bgmFetch(c,'bgm:profile','https://api.bgm.tv/v0/users/'+c.env.BANGUMI_USER)));
 app.get('/api/bangumi/collections',async c=>{const type=Math.min(5,Math.max(1,Number(c.req.query('type'))||3)),subject=Math.min(6,Math.max(1,Number(c.req.query('subject'))||2)),offset=Math.min(10000,Math.max(0,Number(c.req.query('offset'))||0));const out=await bgmFetch(c,`bgm:${subject}:${type}:${offset}`,`https://api.bgm.tv/v0/users/${c.env.BANGUMI_USER}/collections?subject_type=${subject}&type=${type}&limit=24&offset=${offset}`);out.data.data=out.data.data.filter(x=>!x.private).map(x=>({subject_id:x.subject_id,type:x.type,rate:x.rate,comment:x.comment,tags:x.tags,ep_status:x.ep_status,updated_at:x.updated_at,subject:{name:x.subject.name_cn||x.subject.name,image:x.subject.images?.common,eps:x.subject.eps}}));return c.json(out)});
 app.get('/api/bangumi/timeline',async c=>{const until=String(c.req.query('until')||'');if(until&&!/^\d+$/.test(until))fail('分页参数无效。');return c.json(await bgmFetch(c,'bgm:timeline:'+until,`https://next.bgm.tv/p1/users/${c.env.BANGUMI_USER}/timeline?limit=20${until?'&until='+until:''}`))});
-app.get('/api/admin/export',async c=>{const tables=['settings','entries','media','comments','activities','checkins','poetry_books','poems','food_records','games','steam_games','anime_yearbooks','music_tracks'];const result={exported_at:now(),version:1};for(const t of tables)result[t]=await all(c,`SELECT * FROM ${t}`);return c.json(result)});
+app.get('/api/admin/export',async c=>{const tables=['settings','entries','media','comments','activities','checkins','poetry_books','poems','food_records','games','steam_games','anime_yearbooks','music_tracks','bookmarks'];const result={exported_at:now(),version:1};for(const t of tables)result[t]=await all(c,`SELECT * FROM ${t}`);return c.json(result)});
 app.get('*',async c=>{if(c.req.path.startsWith('/api/'))return c.json({error:'接口不存在。'},404);if(c.req.path==='/robots.txt')return c.text('User-agent: *\nDisallow: /admin\nDisallow: /api/\n');const url=new URL(c.req.url);if(c.req.path==='/admin'||c.req.path.startsWith('/admin/'))url.pathname='/admin.html';else if(!/\.[a-z0-9]+$/i.test(c.req.path))url.pathname='/index.html';const r=await c.env.ASSETS.fetch(new Request(url,c.req.raw));if(url.pathname==='/index.html'&&r.ok){const [row,p]=await Promise.all([query(c,"SELECT value FROM settings WHERE key='home-copy'").first(),profile(c)]);const copy={...defaultHomeCopy,...(row?JSON.parse(row.value):{})};const response=new Response(r.body,r);response.headers.set('Cache-Control','no-store');response.headers.delete('ETag');response.headers.delete('Content-Length');return new HTMLRewriter().on('[data-copy]',{element(el){const value=copy[el.getAttribute('data-copy')];if(typeof value==='string')el.setInnerContent(value,{html:false})}}).on('[data-site-name]',{element(el){el.setInnerContent(p.name,{html:false})}}).transform(response)}return new Response(r.body,r)});
 export default app;
