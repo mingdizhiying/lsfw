@@ -1,3 +1,11 @@
+const nav=document.querySelector('header nav');
+if(nav){
+ const inputMode=mode=>nav.setAttribute('data-input',mode);
+ inputMode('pointer');
+ nav.addEventListener('pointerdown',()=>inputMode('pointer'),true);
+ nav.addEventListener('touchstart',()=>inputMode('pointer'),{capture:true,passive:true});
+ document.addEventListener('keydown',event=>{if(['Tab','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter',' '].includes(event.key))inputMode('keyboard');},true);
+}
 const groups=[...document.querySelectorAll('header .nav-group')];
 const hover=matchMedia('(hover: hover) and (pointer: fine)');
 for(const group of groups){

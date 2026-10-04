@@ -1,4 +1,4 @@
-import './navigation.js';
+import './navigation.js?v=1.15.2';
 import {bookmarksPage} from './bookmarks.js';
 import {musicPage,recordCard,bindRecords,filterMusic} from './music.js';
 import {homeMotion} from './motion.js';
