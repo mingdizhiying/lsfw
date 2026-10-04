@@ -1,4 +1,5 @@
 export const homeFields={
+ navHome:['网站与导航','首页导航','首页'],
  navInterests:['网站与导航','推荐分组导航','推荐'],
  navBookmarks:['网站与导航','收藏夹导航','收藏夹'],
  navMusic:['网站与导航','音乐导航','音乐'],
