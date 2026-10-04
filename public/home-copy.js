@@ -1,4 +1,5 @@
 export const homeFields={
+ musicEyebrow:['首页音乐','栏目小标题','06 / MUSIC'],musicTitle:['首页音乐','栏目标题','生活的留声机'],musicLink:['首页音乐','音乐入口','听听更多音乐 →'],musicEmpty:['首页音乐','空白提示','喜欢的旋律，会慢慢放在这里。'],musicError:['首页音乐','读取失败提示','唱片暂时无法读取，请稍后再来。'],
  navHome:['网站与导航','首页导航','首页'],
  navInterests:['网站与导航','推荐分组导航','推荐'],
  navBookmarks:['网站与导航','收藏夹导航','收藏夹'],
