@@ -35,20 +35,39 @@ function bindChart(root,items){
  const panel=root.querySelector('.yearbook-timeline'),preview=root.querySelector('#yb-preview'),buttons=[...root.querySelectorAll('.yb-bar')];
  let active=null,pinned=false,timer;
  function close(){clearTimeout(timer);if(active)active.setAttribute('aria-expanded','false');active=null;pinned=false;preview.hidden=true;}
- function show(button){clearTimeout(timer);if(active&&active!==button)active.setAttribute('aria-expanded','false');active=button;button.setAttribute('aria-expanded','true');const i=items[Number(button.dataset.ybIndex)];
+ function show(button,event){clearTimeout(timer);if(active&&active!==button)active.setAttribute('aria-expanded','false');active=button;button.setAttribute('aria-expanded','true');const i=items[Number(button.dataset.ybIndex)];
  preview.innerHTML=`<button type="button" class="yb-preview-close" aria-label="关闭作品预览">×</button>${safeImage(i.cover)?`<img src="${esc(i.cover)}" alt="${esc(i.name)}" referrerpolicy="no-referrer">`:''}<div><strong>${esc(i.name)}</strong><p>${esc(i.time.label)}</p><a href="#yb-item-${i.id}">定位目录中的作品 →</a></div>`;preview.hidden=false;
- const r=button.getBoundingClientRect(),p=panel.getBoundingClientRect(),w=preview.offsetWidth,h=preview.offsetHeight;
- preview.style.left=Math.max(0,Math.min(p.width-w,r.left-p.left+18))+'px';preview.style.top=Math.max(0,Math.min(r.top+18,innerHeight-h-12)-p.top)+'px';
+ const r=button.getBoundingClientRect(),p=panel.getBoundingClientRect();
+ const viewportWidth=document.documentElement.clientWidth,viewportHeight=innerHeight;
+ const spaceRight=viewportWidth-r.right-20,spaceLeft=r.left-20;
+ const side=spaceRight>=270||spaceRight>=spaceLeft?'right':'left';
+ const width=Math.min(270,Math.max(140,side==='right'?spaceRight:spaceLeft),viewportWidth-24);
+ preview.style.width=width+'px';preview.style.maxWidth='none';
+ preview.style.flexDirection=width<230?'column':'row';
+ preview.style.maxHeight=Math.max(120,viewportHeight-24)+'px';preview.style.overflowY='auto';
+ const pointerY=event&&(event.type!=='click'||event.detail>0)?event.clientY:null;
+ const y=pointerY??(Math.max(12,r.top)+Math.min(viewportHeight-12,r.bottom))/2;
+ const pos=previewPosition(r,y,width,preview.offsetHeight,viewportWidth,viewportHeight);
+ preview.style.left=(pos.left-p.left-panel.clientLeft)+'px';
+ preview.style.top=(pos.top-p.top-panel.clientTop)+'px';
  preview.querySelector('button').onclick=close;preview.querySelector('a').onclick=close;
  }
  buttons.forEach(button=>{
- button.onpointerenter=e=>{if(e.pointerType==='mouse'&&!pinned)show(button)};
+ button.onpointerenter=e=>{if(e.pointerType==='mouse'&&!pinned)show(button,e)};
  button.onpointerleave=()=>{if(!pinned)timer=setTimeout(close,160)};
  button.onfocus=()=>{if(!pinned)show(button)};
- button.onclick=()=>{if(active===button&&pinned)close();else{pinned=true;show(button)}};
+ button.onclick=e=>{if(active===button&&pinned)close();else{pinned=true;show(button,e)}};
  button.onblur=e=>{if(!pinned&&!preview.contains(e.relatedTarget))close()};
  });
  preview.onpointerenter=()=>clearTimeout(timer);preview.onpointerleave=()=>{if(!pinned)timer=setTimeout(close,160)};
  panel.addEventListener('keydown',e=>{if(e.key==='Escape'){close();e.preventDefault()}});
  root.querySelector('.yb-scroll').onscroll=close;
+}
+
+// Viewport coordinates keep long bars anchored to the actual interaction point.
+export function previewPosition(bar,y,width,height,viewportWidth,viewportHeight){
+ const gap=8,margin=12,right=viewportWidth-bar.right-gap-margin,left=bar.left-gap-margin;
+ const x=right>=width||right>=left?bar.right+gap:bar.left-gap-width;
+ return {left:Math.max(margin,Math.min(viewportWidth-width-margin,x)),
+ top:Math.max(margin,Math.min(viewportHeight-height-margin,y-height/2))};
 }
