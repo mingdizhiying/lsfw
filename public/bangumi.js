@@ -1,3 +1,4 @@
+import {rankingsPage} from './anime-rankings.js';
 import {yearbookPage} from './anime-yearbook.js';
 import {$,esc,api,heading,empty,safeImage,textLines,dateTime} from './shared.js';
 export function posterCard(x){
@@ -6,13 +7,14 @@ export function posterCard(x){
 }
 export async function bangumiPage(watchingCard,timelineItem){
  document.title='Bangumi · 岚山飞文';const root=$('#app');
- root.innerHTML=heading('故事还在继续','正在追的故事，和已经走过的世界。')+'<div id="bgm-profile"></div><div class="tabs" role="group" aria-label="Bangumi内容"><button class="button" data-bgm-view="watching">在看</button><button class="button secondary" data-bgm-view="watched">看过 · 海报墙</button><button class="button secondary" data-bgm-view="timeline">时间轴</button><button class="button secondary" data-bgm-view="yearbook">看番年表</button></div><div id="bgm-body"></div>';
+ root.innerHTML=heading('故事还在继续','正在追的故事，和已经走过的世界。')+'<div id="bgm-profile"></div><div class="tabs" role="group" aria-label="Bangumi内容"><button class="button" data-bgm-view="watching">在看</button><button class="button secondary" data-bgm-view="watched">看过 · 海报墙</button><button class="button secondary" data-bgm-view="timeline">时间轴</button><button class="button secondary" data-bgm-view="yearbook">看番年表</button><button class="button secondary" data-bgm-view="ranking">追番排行</button></div><div id="bgm-body"></div>';
  api('/api/bangumi/profile').then(p=>{$('#bgm-profile').innerHTML=`<div class="bgm-profile"><img src="${esc(safeImage(p.data.avatar.medium))}" alt=""><div><h2>${esc(p.data.nickname)}</h2><a href="https://bgm.tv/user/1063113" target="_blank" rel="noopener">Bangumi 个人主页 ↗</a></div></div>`}).catch(e=>{$('#bgm-profile').textContent=e.message});
  let revision=0;
  async function render(mode){
   const current=++revision;let offset=0,until='',busy=false;const seen=new Set();
   const url=new URL(location.href);url.searchParams.set('view',mode);history.replaceState(null,'',url);
   root.querySelectorAll('[data-bgm-view]').forEach(b=>{const selected=b.dataset.bgmView===mode;b.classList.toggle('secondary',!selected);b.setAttribute('aria-pressed',String(selected))});
+  if(mode==='ranking')return rankingsPage($('#bgm-body'),()=>current===revision);
   if(mode==='yearbook')return yearbookPage($('#bgm-body'),()=>current===revision);
   $('#bgm-body').innerHTML=`<div class="section-head"><div><div class="eyebrow">${mode==='watched'?'THE STORIES I KEEP':mode==='watching'?'NOW WATCHING':'LIFE ON BANGUMI'}</div><h2>${mode==='watched'?'看过的世界':mode==='watching'?'正在追的故事':'时间轴'}</h2></div><span class="small" id="bgm-count"></span></div><div id="bgm-list" class="${mode==='watched'?'poster-wall':mode==='timeline'?'timeline':'collection-grid'}"></div><button id="bgm-more" class="button secondary">${mode==='timeline'?'更早的动态':'加载更多'}</button><p class="small" id="sync-time" role="status"></p>`;
   const list=$('#bgm-list'),button=$('#bgm-more'),feedback=$('#sync-time'),count=$('#bgm-count');
@@ -25,5 +27,5 @@ export async function bangumiPage(watchingCard,timelineItem){
   }catch(e){if(current===revision){feedback.textContent=e.message+' 请点击重试。';button.textContent='重新读取';button.hidden=false}}finally{busy=false;if(current===revision)button.disabled=false}}
   button.onclick=load;await load();
  }
- root.querySelectorAll('[data-bgm-view]').forEach(b=>b.onclick=()=>render(b.dataset.bgmView));const view=new URLSearchParams(location.search).get('view');await render(['watched','timeline','yearbook'].includes(view)?view:'watching');
+ root.querySelectorAll('[data-bgm-view]').forEach(b=>b.onclick=()=>render(b.dataset.bgmView));const view=new URLSearchParams(location.search).get('view');await render(['watched','timeline','yearbook','ranking'].includes(view)?view:'watching');
 }
