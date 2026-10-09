@@ -1,10 +1,14 @@
 import {directoryURL,fetchDirectory} from './anime-yearbook.js';
-export async function fetchRankedDirectory(url,year,fetcher=fetch){const result=await fetchDirectory(url,year,fetcher);return {...result,items:result.items.filter(i=>i.type===2).map((i,n)=>({...i,position:n+1}))};}
+export async function fetchRankedDirectory(url,year,fetcher=fetch,user='1063113'){
+ const result=await fetchDirectory(url,year,fetcher),watched=new Set();let offset=0,total=1;
+ while(offset<total){const response=await fetcher(`https://api.bgm.tv/v0/users/${encodeURIComponent(user)}/collections?subject_type=2&type=2&limit=100&offset=${offset}`,{headers:{'User-Agent':'LanshanFeiwen/1.0 (https://lsfw.top)'},redirect:'manual',signal:AbortSignal.timeout(12000)});if(!response.ok)throw Error('暂时无法核对看过状态，原排行保留。');const r=await response.json();if(!Array.isArray(r.data)||!Number.isInteger(r.total)||r.total<0||r.total>10000||(!r.data.length&&offset<r.total))throw Error('看过列表未能完整读取。');total=r.total;for(const i of r.data)if(i.type===2&&!i.private)watched.add(i.subject_id);offset+=r.data.length;}
+ return {...result,items:result.items.filter(i=>i.type===2&&watched.has(i.id)).map((i,n)=>({...i,position:n+1}))};
+}
 export function rankingRoutes(app){
  const q=(c,s,...v)=>c.env.DB.prepare(s).bind(...v);
  const pack=row=>({year:row.year,url:row.url,title:row.title,items:JSON.parse(row.items_json),syncedAt:row.synced_at,error:row.last_error});
  async function sync(c,year,url,background=false){
-  const result=await fetchRankedDirectory(url,year),now=new Date().toISOString();
+  const result=await fetchRankedDirectory(url,year,fetch,c.env.BANGUMI_USER),now=new Date().toISOString();
   if(background){await q(c,'UPDATE anime_rankings SET title=?,items_json=?,synced_at=?,next_sync=?,last_error=? WHERE year=? AND url=?',result.title,JSON.stringify(result.items),now,Date.now()+21600000,'',year,url).run();return;}
   await q(c,'INSERT INTO anime_rankings(year,url,title,items_json,synced_at,next_sync,last_error) VALUES(?,?,?,?,?,?,?) ON CONFLICT(year) DO UPDATE SET url=excluded.url,title=excluded.title,items_json=excluded.items_json,synced_at=excluded.synced_at,next_sync=excluded.next_sync,last_error=excluded.last_error',year,url,result.title,JSON.stringify(result.items),now,Date.now()+21600000,'').run();
   return {...result,year,url,syncedAt:now,error:''};

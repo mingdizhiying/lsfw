@@ -1,7 +1,7 @@
 const q=(c,s,...p)=>c.env.DB.prepare(s).bind(...p);
 export async function publicAlbumPhoto(c,id){return !!await q(c,"SELECT a.media_id FROM album_media a JOIN entries e ON e.id=a.album_id WHERE a.media_id=? AND e.kind='album' AND e.status='published' LIMIT 1",id).first();}
 export function albumMediaRoutes(app){
- app.get('/api/admin/album-library',async c=>c.json((await q(c,"SELECT m.id,m.caption FROM media m WHERE EXISTS(SELECT 1 FROM entries e WHERE e.id=m.entry_id AND e.kind='album') OR EXISTS(SELECT 1 FROM album_media a WHERE a.media_id=m.id) ORDER BY m.created_at DESC").all()).results));
+ app.get('/api/admin/album-library',async c=>c.json((await q(c,"SELECT m.id,m.caption,(SELECT COUNT(*) FROM album_media a WHERE a.media_id=m.id) AS album_count FROM media m WHERE EXISTS(SELECT 1 FROM entries e WHERE e.id=m.entry_id AND e.kind='album') OR EXISTS(SELECT 1 FROM album_media a WHERE a.media_id=m.id) ORDER BY m.created_at DESC").all()).results));
  app.use('/api/admin/albums/:album/*',async(c,next)=>{if(!await q(c,"SELECT id FROM entries WHERE id=? AND kind='album'",c.req.param('album')).first())return c.json({error:'相册不存在。'},404);await next();});
  app.post('/api/admin/albums/:album/photos',async c=>{const b=await c.req.json(),ids=[...new Set(Array.isArray(b.ids)?b.ids:[])];if(!ids.length||ids.length>200||ids.some(id=>typeof id!=='string'||!/^[a-z\d-]+$/i.test(id)))return c.json({error:'请选择最多 200 张相册照片。'},400);const album=c.req.param('album'),stamp=new Date().toISOString();
  for(const id of ids)if(!await q(c,"SELECT m.id FROM media m WHERE m.id=? AND (EXISTS(SELECT 1 FROM entries e WHERE e.id=m.entry_id AND e.kind='album') OR EXISTS(SELECT 1 FROM album_media a WHERE a.media_id=m.id))",id).first())return c.json({error:'部分照片已被移除，请重新选择。'},409);
