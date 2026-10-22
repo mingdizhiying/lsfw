@@ -2,7 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "feiwen",
   "main": "src/worker.js",
-  "build": {"command": "node scripts/build-releases.mjs"},
+  "build": {
+    "command": "node scripts/build-releases.mjs"
+  },
   "compatibility_date": "2026-09-18",
   "compatibility_flags": [
     "nodejs_compat"
@@ -31,6 +33,16 @@
     {
       "binding": "MEDIA",
       "bucket_name": "lsfw-media"
+    }
+  ],
+  "ratelimits": [
+    {
+      "name": "MEDIA_RATE_LIMITER",
+      "namespace_id": "2026102201",
+      "simple": {
+        "limit": 240,
+        "period": 60
+      }
     }
   ]
 }
