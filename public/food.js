@@ -1,4 +1,4 @@
-import {openFoodMaps} from './food-maps.js';
+import {openFoodMaps} from './food-maps.js?v=1.20.4';
 import {$,esc,api,heading,empty,textLines} from './shared.js';
 export async function foodPage(){
  document.title='美食 · 岚山飞文';const root=$('#app'),rows=await api('/api/food');

@@ -9,7 +9,7 @@ import {bangumiPage} from './bangumi.js';
 import {defaultHomeCopy} from './home-copy.js';
 import {poetryPage} from './poetry.js';
 let copy={...defaultHomeCopy};
-import {foodPage} from './food.js';
+import {foodPage} from './food.js?v=1.20.4';
 import {$,esc,textLines,safeURL,safeImage,html,api,send,dateTime,empty,heading,wheel,legend} from './shared.js';
 const app=$('#app'),path=location.pathname.replace(/\/$/,'')||'/';let articleToken='',unlockedEntry=null,objectURLs=[];$('#year').textContent=new Date().getFullYear();
 const entryLink=e=>'/entry/'+encodeURIComponent(e.id);

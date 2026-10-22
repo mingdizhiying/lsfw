@@ -12,8 +12,9 @@ export function foodMapLinks(record){
  ];
 }
 export function openFoodMaps(record,trigger){
- document.querySelector('#food-map-dialog')?.remove();
- const dialog=document.createElement('dialog');dialog.id='food-map-dialog';dialog.className='food-map-dialog';dialog.setAttribute('aria-labelledby','food-map-title');
+ document.querySelector('#food-map-dialog .food-map-close')?.click();
+ const overlay=document.createElement('div');overlay.className='food-map-overlay';
+ const dialog=document.createElement('div');dialog.id='food-map-dialog';dialog.className='food-map-dialog';dialog.setAttribute('aria-labelledby','food-map-title');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');
  const title=document.createElement('h2');title.id='food-map-title';title.textContent='选择地图';
  const close=document.createElement('button');close.type='button';close.className='food-map-close';close.textContent='×';close.setAttribute('aria-label','关闭地图选择');
  const text=document.createElement('p');text.textContent=foodSearchText(record);text.className='food-map-query';
@@ -22,10 +23,11 @@ export function openFoodMaps(record,trigger){
  const copy=document.createElement('button');copy.type='button';copy.className='button secondary';copy.textContent='复制店名与地址';
  const status=document.createElement('p');status.setAttribute('role','status');status.className='small';
  const note=document.createElement('p');note.className='small';note.textContent='由地图提供搜索和定位，请在结果中确认具体门店。';
- dialog.append(close,title,text,links,copy,status,note);document.body.append(dialog);
- const dismiss=()=>{if(dialog.open&&typeof dialog.close==='function')dialog.close();dialog.remove();trigger?.focus();};
- close.onclick=dismiss;dialog.addEventListener('cancel',e=>{e.preventDefault();dismiss()});dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dismiss();}});
+ dialog.append(close,title,text,links,copy,status,note);overlay.append(dialog);document.body.append(overlay);
+ const previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';
+ const dismiss=()=>{document.removeEventListener('keydown',onKey);overlay.remove();document.body.style.overflow=previousOverflow;trigger?.focus({preventScroll:true});};
+ const onKey=e=>{if(e.key==='Escape'){e.preventDefault();dismiss();}else if(e.key==='Tab'){const items=[close,...links.children,copy],first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}};
+ document.addEventListener('keydown',onKey);close.onclick=dismiss;overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss();});
  copy.onclick=async()=>{try{await navigator.clipboard.writeText(text.textContent);status.textContent='已复制。';}catch{status.textContent='无法自动复制，请长按上方店名与地址复制。';}};
- if(typeof dialog.showModal==='function')dialog.showModal();else {dialog.setAttribute('open','');dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');}
- close.focus();
+ close.focus({preventScroll:true});
 }
