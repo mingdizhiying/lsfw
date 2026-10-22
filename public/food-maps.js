@@ -1,11 +1,11 @@
 export function foodSearchText(record){
  const title=String(record.title||'').trim(),address=String(record.address||'').trim();
- return address?[...new Set([record.province,record.city,title,address].map(x=>String(x||'').trim()).filter(Boolean))].join(' '):title;
+ return [...new Set([record.province,record.city,title,address].map(x=>String(x||'').trim()).filter(Boolean))].join(' ');
 }
 export function foodMapLinks(record){
  const query=foodSearchText(record),make=(base,params)=>{const u=new URL(base);for(const [k,v] of Object.entries(params))if(v)u.searchParams.set(k,v);return u.href;};
  return [
- ['高德地图',make('https://uri.amap.com/search',{keyword:query,src:'lsfw',callnative:'1'})],
+ ['高德地图',make('https://uri.amap.com/search',{keyword:query,city:String(record.city||record.province||'').trim(),src:'lsfw',callnative:'1'})],
  ['腾讯地图',make('https://apis.map.qq.com/uri/v1/search',{keyword:query,referer:'lsfw'})],
  ['苹果地图',make('https://maps.apple.com/',{q:query})],
  ['Google 地图',make('https://www.google.com/maps/search/',{api:'1',query})]
@@ -22,7 +22,7 @@ export function openFoodMaps(record,trigger){
  for(const [name,url] of foodMapLinks(record)){const a=document.createElement('a');a.className='button secondary';a.textContent=name+' ↗';a.href=url;a.target='_blank';a.rel='noopener noreferrer';links.append(a);}
  const copy=document.createElement('button');copy.type='button';copy.className='button secondary';copy.textContent='复制店名与地址';
  const status=document.createElement('p');status.setAttribute('role','status');status.className='small';
- const note=document.createElement('p');note.className='small';note.textContent='由地图提供搜索和定位，请在结果中确认具体门店。';
+ const note=document.createElement('p');note.className='small';note.textContent='按记录的省份和城市搜索，请在地图结果中确认具体门店。';
  dialog.append(close,title,text,links,copy,status,note);overlay.append(dialog);document.body.append(overlay);
  const previousOverflow=document.body.style.overflow;document.body.style.overflow='hidden';
  const dismiss=()=>{document.removeEventListener('keydown',onKey);overlay.remove();document.body.style.overflow=previousOverflow;trigger?.focus({preventScroll:true});};
