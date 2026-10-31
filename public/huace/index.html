@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111513"><meta name="description" content="联成纸塑2026业务画册，在线翻阅。">
+<title>联成纸塑 · 2026 业务画册</title>
+<link rel="stylesheet" href="style.css?v=spread2">
+</head>
+<body>
+<header><div class="brand"><span class="monogram" aria-hidden="true">LC</span><div><h1>联成纸塑</h1><p>2026 · 业务画册</p></div></div><button id="enlarge" class="text-button">放大查看 <span aria-hidden="true">↗</span></button></header>
+<main id="stage" aria-label="画册阅读区">
+  <button id="prevSide" class="side previous" aria-label="上一页">‹</button>
+  <div id="paper"><div id="spread"><div class="leaf"><img id="pageImage" alt="画册左页" draggable="false"></div><div class="leaf"><img id="rightImage" alt="画册右页" draggable="false"></div></div><div id="status" role="status">正在载入画册…</div><button id="retry" hidden>重新加载</button></div>
+  <button id="nextSide" class="side next" aria-label="下一页">›</button>
+</main>
+<footer>
+ <div class="navigation"><button id="prev" class="nav-button" aria-label="上一页">← <span>上一页</span></button><form id="jump"><label for="pageNumber" class="sr-only">输入页码并回车跳转</label><input id="pageNumber" type="number" min="1" max="208" value="1" inputmode="numeric" aria-label="页码"><span class="divider">/</span><span id="total">208</span><button type="submit" class="sr-only">跳转</button></form><button id="next" class="nav-button"><span>下一页</span> →</button></div>
+ <div class="track"><div id="progress"></div></div>
+ <p class="hint">左右滑动翻页 · 点击放大，再次点击缩小</p>
+</footer>
+<dialog id="zoomDialog" aria-label="高清页面"><div class="zoom-bar"><span id="zoomTitle">高清原图</span><div><span>点击图片缩小</span><button id="closeZoom" aria-label="关闭高清页面">缩小 ×</button></div></div><div id="zoomScroll"><img id="zoomImage" alt="画册高清页面"><p id="hdStatus" role="status">正在加载高清原图…</p></div></dialog>
+<noscript>请启用浏览器 JavaScript 以翻阅画册。</noscript>
+<script src="catalog.js"></script><script src="reader.js?v=spread2"></script>
+</body></html>
