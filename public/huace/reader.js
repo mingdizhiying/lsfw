@@ -4,11 +4,14 @@ const $=id=>document.getElementById(id),total=window.CATALOG.pages.length,key='l
 const images=[$('pageImage'),$('rightImage')],hd=$('zoomImage'),dialog=$('zoomDialog');
 let current=1,seq=0,zoomSeq=0,swipe=null,swiped=false;
 const path=(folder,n)=>'assets/'+folder+'/'+String(n).padStart(3,'0')+'.jpg';
+function fitSpread(){const box=$('paper').getBoundingClientRect(),single=current===1||current===total,ratio=(single?595:1190)/807;const w=Math.min(box.width,box.height*ratio);$('spread').style.width=w+'px';$('spread').style.height=(w/ratio)+'px';$('spread').classList.toggle('single',single);}
+window.addEventListener('resize',fitSpread);
+if(window.ResizeObserver)new ResizeObserver(fitSpread).observe($('paper'));
 const pair=()=>current===1?[null,1]:[current,current<total?current+1:null];
 function advance(d){show(d<0?(current<=2?1:current-2):(current===1?2:current+2));}
 function show(n){
  n=Math.max(1,Math.min(total,Math.trunc(n)));current=n===1?1:Math.floor(n/2)*2;
- const token=++seq,pages=pair();let done=0,failed=false;
+ fitSpread();const token=++seq,pages=pair();let done=0,failed=false;
  $('pageNumber').value=current;$('pageNumber').max=total;$('total').textContent=total;
  $('progress').style.width=(Math.min(total,current===1?1:current+1)/total*100)+'%';
  for(const id of ['prev','prevSide'])$(id).disabled=current===1;
@@ -31,16 +34,18 @@ function openZoom(page){
  const p=page||pair().find(Boolean),img=images.find(i=>Number(i.dataset.page)===p);
  if(!img||img.dataset.ready!=='true')return;
  const token=++zoomSeq;$('zoomTitle').textContent='第 '+p+' 页 · 高清原图';$('hdStatus').textContent='正在加载高清原图…';
- hd.src=path('pages',p);hd.alt='画册第 '+p+' 页高清原图';dialog.showModal();$('zoomScroll').scrollTo(0,0);
- const original=new Image();original.onload=()=>{if(token!==zoomSeq||!dialog.open)return;hd.src=original.src;$('hdStatus').textContent='';};original.onerror=()=>{if(token===zoomSeq)$('hdStatus').textContent='高清图加载失败，当前显示阅读版';};original.src=path('hd',p);
+ hd.src=path('pages',p);hd.alt='画册第 '+p+' 页高清原图';dialog.hidden=false;document.body.classList.add('zoom-open');$('closeZoom').focus();$('zoomScroll').scrollTo(0,0);
+ const original=new Image();original.onload=()=>{if(token!==zoomSeq||dialog.hidden)return;hd.src=original.src;$('hdStatus').textContent='';};original.onerror=()=>{if(token===zoomSeq)$('hdStatus').textContent='高清图加载失败，当前显示阅读版';};original.src=path('hd',p);
 }
 for(const id of ['prev','prevSide'])$(id).onclick=()=>advance(-1);
 for(const id of ['next','nextSide'])$(id).onclick=()=>advance(1);
 $('jump').onsubmit=e=>{e.preventDefault();const n=Number($('pageNumber').value);if(Number.isFinite(n)&&n>=1)show(n);else $('pageNumber').value=current;$('pageNumber').blur();};
 $('retry').onclick=()=>show(current);$('enlarge').onclick=()=>openZoom();
 images.forEach(img=>img.onclick=()=>{if(!swiped)openZoom(Number(img.dataset.page));});
-hd.onclick=()=>dialog.close();$('closeZoom').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{zoomSeq++;hd.removeAttribute('src');});
-document.addEventListener('keydown',e=>{if(dialog.open||e.target.tagName==='INPUT')return;if(e.key==='ArrowRight'){e.preventDefault();advance(1);}if(e.key==='ArrowLeft'){e.preventDefault();advance(-1);}});
+function closeZoom(){dialog.hidden=true;document.body.classList.remove('zoom-open');zoomSeq++;hd.removeAttribute('src');$('enlarge').focus();}
+hd.onclick=closeZoom;$('closeZoom').onclick=closeZoom;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!dialog.hidden)closeZoom();});
+document.addEventListener('keydown',e=>{if(!dialog.hidden||e.target.tagName==='INPUT')return;if(e.key==='ArrowRight'){e.preventDefault();advance(1);}if(e.key==='ArrowLeft'){e.preventDefault();advance(-1);}});
 $('stage').addEventListener('touchstart',e=>{swiped=false;swipe=e.touches.length===1?{x:e.touches[0].clientX,y:e.touches[0].clientY}:null;},{passive:true});
 $('stage').addEventListener('touchmove',e=>{if(e.touches.length!==1)swipe=null;},{passive:true});
 $('stage').addEventListener('touchend',e=>{if(!swipe||e.changedTouches.length!==1)return;const dx=e.changedTouches[0].clientX-swipe.x,dy=e.changedTouches[0].clientY-swipe.y;swipe=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.5){swiped=true;advance(dx<0?1:-1);setTimeout(()=>swiped=false,500);}},{passive:true});
