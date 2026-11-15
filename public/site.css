@@ -155,3 +155,16 @@ header .nav-group{width:max-content;min-width:max-content}header .nav-group .nav
 .game-section-links-home{margin:4px 0 28px}
 @media(max-width:600px){.game-section-links{gap:10px;margin-bottom:28px}.game-section-links .game-section-link{flex:1;min-width:0;padding:12px 14px;gap:10px;font-size:14px}.game-section-links-home{margin-bottom:24px}}
 @media(prefers-reduced-motion:reduce){.game-section-links .game-section-link,.game-section-link>span:last-child{transition:none;transform:none!important}}
+
+.game-category-picker{border:1px solid #bdbbaa;border-radius:12px;padding:12px 16px 16px;margin:20px 0;background:#f5f5ed}.game-category-picker legend{padding:0 8px;color:#686e59;font-size:14px}.game-category-picker>div{display:flex;gap:12px}.game-category-picker label{display:flex!important;align-items:center;gap:8px;flex:1;margin:0!important;padding:12px;border:1px solid #d5d8c9;border-radius:8px;cursor:pointer}.game-category-picker input{width:auto!important;margin:0;accent-color:#78865e}#demo-review-field[hidden],#recommended-review-field[hidden]{display:none!important}
+
+/* Preserve the full artwork of landscape Steam fallback covers. */
+.game-front img.game-cover-wide{object-fit:contain;background:radial-gradient(ellipse at center,#e8e9dd,#d4d8c8);padding:0}.game-front:has(.game-cover-wide) .game-flip-hint{background:linear-gradient(transparent,#353f2ba8)}
+
+.project-visit{display:inline-flex;margin:0 0 28px}.prose pre{overflow-x:auto;white-space:pre;padding:16px;background:#eeeee5;border-radius:8px}.prose table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}.prose th,.prose td{padding:8px 12px;border:1px solid #cccdbf}
+
+.local-draft-notice{padding:12px 16px;margin:12px 0 20px;background:#edf0e4;border:1px solid #c7ceba;border-radius:10px;font-size:13px;overflow-wrap:anywhere}.local-draft-notice button{margin:8px 8px 0 0}@media(max-width:600px){.admin-content{min-width:0}.admin-content input:not([type=checkbox]):not([type=radio]),.admin-content textarea,.admin-content select{max-width:100%;font-size:16px}.editor-toolbar{flex-wrap:wrap}.game-category-picker>div{flex-wrap:wrap}.sticky-save{flex-wrap:wrap;padding-bottom:max(12px,env(safe-area-inset-bottom))}}
+
+.image-retry{display:block;position:relative;z-index:2;margin:8px auto;padding:10px 14px;border:1px solid #bfc6b2;border-radius:8px;background:#f5f4ea;color:#59624b;cursor:pointer;max-width:100%}
+
+#recent-updates{margin:48px 0 64px}.recent-update-row{display:flex;align-items:center;gap:20px;padding:18px 12px;border-bottom:1px solid var(--line);text-decoration:none;transition:background .2s,transform .2s}.recent-update-type{flex:0 0 140px;font-size:12px;color:var(--muted)}.recent-update-title{flex:1;min-width:0;overflow-wrap:anywhere}.recent-update-arrow{flex:none;color:#778268;font-size:22px}@media(hover:hover){.recent-update-row:hover{background:#eceee2;transform:translateY(-2px)}}.recent-update-row:focus-visible{outline:2px solid #78865e;outline-offset:3px}@media(max-width:600px){.recent-update-row{gap:10px;padding:16px 4px}.recent-update-type{flex-basis:88px;font-size:11px}.recent-update-title{font-size:15px}}@media(prefers-reduced-motion:reduce){.recent-update-row{transition:none;transform:none!important}}
